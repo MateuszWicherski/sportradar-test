@@ -3,7 +3,7 @@ package pl.wicherski.sportradar.scoreboard;
 import java.util.Objects;
 import java.util.UUID;
 
-public class GameId {
+public final class GameId {
 
     private final UUID id;
 
