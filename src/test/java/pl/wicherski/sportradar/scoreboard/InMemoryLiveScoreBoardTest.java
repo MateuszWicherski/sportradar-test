@@ -151,4 +151,12 @@ class InMemoryLiveScoreBoardTest {
                                .isEqualTo(game2OriginalScore);
     }
 
+    @Test
+    void shouldThrowGameNotFoundException_whenUpdatingScore_ofNotTrackedGame() {
+        GameId gameId = new GameId();
+        Score newScore = Score.of(1, 2);
+
+        assertThatThrownBy(() -> board.updateScore(gameId, newScore)).isInstanceOf(GameNotFoundException.class);
+    }
+
 }

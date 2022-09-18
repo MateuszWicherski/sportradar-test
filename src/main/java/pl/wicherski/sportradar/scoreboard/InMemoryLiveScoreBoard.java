@@ -2,6 +2,7 @@ package pl.wicherski.sportradar.scoreboard;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
@@ -33,7 +34,8 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     @Override
     public void updateScore(GameId gameId, Score score) throws GameNotFoundException {
-        Game gameToUpdate = games.get(gameId);
+        Game gameToUpdate = Optional.ofNullable(games.get(gameId))
+                                    .orElseThrow(() -> new GameNotFoundException(gameId));
         Game updatedGame = gameToUpdate.withUpdatedScore(score);
         games.replace(gameId, updatedGame);
     }
