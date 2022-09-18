@@ -25,6 +25,9 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     @Override
     public void finishGame(GameId gameId) {
+        if (Objects.isNull(gameId)) {
+            throw new IllegalArgumentException("Game ID cannot be null!");
+        }
         games.remove(gameId);
     }
 

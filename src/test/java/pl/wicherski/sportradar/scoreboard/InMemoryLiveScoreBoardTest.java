@@ -106,4 +106,9 @@ class InMemoryLiveScoreBoardTest {
         assertThatCode(() -> board.finishGame(gameId)).doesNotThrowAnyException();
     }
 
+    @Test
+    void shouldThrowIllegalArgumentException_whenFinishingTheGame_withNullId() {
+        assertThatThrownBy(() -> board.finishGame(null)).isInstanceOf(IllegalArgumentException.class);
+    }
+
 }
