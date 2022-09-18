@@ -3,15 +3,20 @@ package pl.wicherski.sportradar.scoreboard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static pl.wicherski.sportradar.scoreboard.GameAssert.assertThatGame;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,11 +29,16 @@ class InMemoryLiveScoreBoardTest {
     private Map<GameId, Game> storedGames;
     @Mock
     private TimeProvider timeProviderMock;
+    @Mock
+    private ScoreSummaryFactory scoreSummaryFactoryMock;
+    @Captor
+    private ArgumentCaptor<List<Game>> gamesCaptor;
 
     @BeforeEach
     void setUp() {
         storedGames = new HashMap<>();
-        board = new InMemoryLiveScoreBoard(storedGames, timeProviderMock);
+        board = new InMemoryLiveScoreBoard(storedGames, timeProviderMock, scoreSummaryFactoryMock,
+                                           Comparator.comparing(Game::creationTimestamp));
     }
 
     @Test
@@ -188,6 +198,35 @@ class InMemoryLiveScoreBoardTest {
         GameId gameId = new GameId();
 
         assertThatThrownBy(() -> board.updateScore(gameId, null)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldSortGamesUsingComparator_whenCreatingSummary() {
+        // ordering based on creation timestamp - see setUp
+        Instant now = Instant.now();
+        Game game1 = new Game("a", "b", Score.of(0, 0), now.minusSeconds(1));
+        Game game2 = new Game("c", "d", Score.of(2, 2), now.minusSeconds(2));
+        Game game3 = new Game("e", "f", Score.of(3, 0), now);
+        Game game4 = new Game("g", "h", Score.of(0, 0), now.minusSeconds(4));
+        storedGames.put(new GameId(), game1);
+        storedGames.put(new GameId(), game2);
+        storedGames.put(new GameId(), game3);
+        storedGames.put(new GameId(), game4);
+
+        board.getSummary();
+
+        verify(scoreSummaryFactoryMock).createSummaryFor(gamesCaptor.capture());
+        assertThat(gamesCaptor.getValue()).containsExactly(game4, game2, game1, game3);
+    }
+
+    @Test
+    void shouldReturnScoreSummary_whenCreatingSummary() {
+        ScoreSummary scoreSummary = mock(ScoreSummary.class);
+        when(scoreSummaryFactoryMock.createSummaryFor(any(List.class))).thenReturn(scoreSummary);
+
+        ScoreSummary summary = board.getSummary();
+
+        assertThat(summary).isSameAs(scoreSummary);
     }
 
 }

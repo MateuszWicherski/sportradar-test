@@ -1,5 +1,7 @@
 package pl.wicherski.sportradar.scoreboard;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -9,10 +11,16 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     private final Map<GameId, Game> games;
     private final TimeProvider timeProvider;
+    private final ScoreSummaryFactory scoreSummaryFactory;
+    private final Comparator<Game> gamesSortingComparator;
 
-    InMemoryLiveScoreBoard(Map<GameId, Game> games, TimeProvider timeProvider) {
+    InMemoryLiveScoreBoard(Map<GameId, Game> games,
+                           TimeProvider timeProvider,
+                           ScoreSummaryFactory scoreSummaryFactory, Comparator<Game> gamesSortingComparator) {
         this.games = games;
         this.timeProvider = timeProvider;
+        this.scoreSummaryFactory = scoreSummaryFactory;
+        this.gamesSortingComparator = gamesSortingComparator;
     }
 
     @Override
@@ -52,7 +60,11 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     @Override
     public ScoreSummary getSummary() {
-        return null;
+        List<Game> sortedGames = games.values()
+                                      .stream()
+                                      .sorted(gamesSortingComparator)
+                                      .toList();
+        return scoreSummaryFactory.createSummaryFor(sortedGames);
     }
 
 }
