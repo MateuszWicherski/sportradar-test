@@ -1,5 +1,5 @@
 package pl.wicherski.sportradar.scoreboard;
 
-public record Game(String homeTeamName, String awayTeamName) {
+public record Game(String homeTeamName, String awayTeamName, Score score) {
 
 }

@@ -41,10 +41,10 @@ class InMemoryLiveScoreBoardTest {
     void shouldStoreStartedGame_whenStartingGame() {
         GameId gameId = board.startGame(TEAM_1, TEAM_2);
 
-        Game expectedGame = new Game(TEAM_1, TEAM_2);
         assertThat(storedGames).hasSize(1)
                                .extractingByKey(gameId)
-                               .isEqualTo(expectedGame);
+                               .extracting(Game::homeTeamName, Game::awayTeamName)
+                               .containsExactly(TEAM_1, TEAM_2);
     }
 
     @Test
@@ -53,6 +53,17 @@ class InMemoryLiveScoreBoardTest {
         board.startGame("team3", "team4");
 
         assertThat(storedGames).hasSize(2);
+    }
+
+    @Test
+    void shouldStartGameWithScoreZeroToZero_whenStartingGame() {
+        GameId gameId = board.startGame(TEAM_1, TEAM_2);
+
+        Score expectedScore = Score.of(0, 0);
+        assertThat(storedGames).extractingByKey(gameId)
+                               .extracting(Game::score)
+                               .isEqualTo(expectedScore);
+
     }
 
     @Test
@@ -68,7 +79,7 @@ class InMemoryLiveScoreBoardTest {
     @Test
     void shouldRemoveGameFromStore_whenFinishingTheGame() {
         GameId gameId = new GameId();
-        storedGames.put(gameId, new Game(TEAM_1, TEAM_2));
+        storedGames.put(gameId, new Game(TEAM_1, TEAM_2, Score.of(0, 0)));
 
         board.finishGame(gameId);
 
@@ -79,8 +90,8 @@ class InMemoryLiveScoreBoardTest {
     void shouldRemoveOnlyFinishedGameFromStore_whenFinishingTheGame() {
         GameId gameId1 = new GameId();
         GameId gameId2 = new GameId();
-        storedGames.put(gameId1, new Game(TEAM_1, TEAM_2));
-        Game retainedGame = new Game("team3", "team4");
+        storedGames.put(gameId1, new Game(TEAM_1, TEAM_2, Score.of(0, 0)));
+        Game retainedGame = new Game("team3", "team4", Score.of(0, 0));
         storedGames.put(gameId2, retainedGame);
 
         board.finishGame(gameId1);
@@ -100,7 +111,7 @@ class InMemoryLiveScoreBoardTest {
     @Test
     void shouldDoNothing_whenFinishingTheGame_thatHasAlreadyBeenFinished() {
         GameId gameId = new GameId();
-        storedGames.put(gameId, new Game(TEAM_1, TEAM_2));
+        storedGames.put(gameId, new Game(TEAM_1, TEAM_2, Score.of(0, 0)));
         board.finishGame(gameId);
 
         assertThatCode(() -> board.finishGame(gameId)).doesNotThrowAnyException();

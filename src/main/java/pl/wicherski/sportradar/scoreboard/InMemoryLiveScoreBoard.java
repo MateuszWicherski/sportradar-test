@@ -17,7 +17,7 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
             throw new IllegalArgumentException("Team name cannot be null! Home=%s, Away=%s".formatted(homeTeam,
                                                                                                       awayTeam));
         }
-        Game game = new Game(homeTeam, awayTeam);
+        Game game = new Game(homeTeam, awayTeam, Score.of(0, 0));
         GameId gameId = new GameId();
         games.put(gameId, game);
         return gameId;
