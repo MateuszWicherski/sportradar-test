@@ -6,8 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 class InMemoryLiveScoreBoardTest {
 
@@ -89,6 +88,22 @@ class InMemoryLiveScoreBoardTest {
         assertThat(storedGames).hasSize(1)
                                .extractingByKey(gameId2)
                                .isEqualTo(retainedGame);
+    }
+
+    @Test
+    void shouldDoNothing_whenFinishingTheGame_thatDoesNotExist() {
+        GameId gameId = new GameId();
+
+        assertThatCode(() -> board.finishGame(gameId)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void shouldDoNothing_whenFinishingTheGame_thatHasAlreadyBeenFinished() {
+        GameId gameId = new GameId();
+        storedGames.put(gameId, new Game(TEAM_1, TEAM_2));
+        board.finishGame(gameId);
+
+        assertThatCode(() -> board.finishGame(gameId)).doesNotThrowAnyException();
     }
 
 }
