@@ -31,7 +31,7 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
         }
 
         Game game = new Game(homeTeam, awayTeam, Score.of(0, 0), timeProvider.now());
-        GameId gameId = new GameId();
+        GameId gameId = GameId.generate();
         games.put(gameId, game);
         return gameId;
     }

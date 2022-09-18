@@ -107,7 +107,7 @@ class InMemoryLiveScoreBoardTest {
 
     @Test
     void shouldRemoveGameFromStore_whenFinishingTheGame() {
-        GameId gameId = new GameId();
+        GameId gameId = GameId.generate();
         storedGames.put(gameId, new Game(TEAM_1, TEAM_2, Score.of(0, 0), Instant.now()));
 
         board.finishGame(gameId);
@@ -117,8 +117,8 @@ class InMemoryLiveScoreBoardTest {
 
     @Test
     void shouldRemoveOnlyFinishedGameFromStore_whenFinishingTheGame() {
-        GameId gameId1 = new GameId();
-        GameId gameId2 = new GameId();
+        GameId gameId1 = GameId.generate();
+        GameId gameId2 = GameId.generate();
         storedGames.put(gameId1, new Game(TEAM_1, TEAM_2, Score.of(0, 0), Instant.now()));
         Game retainedGame = new Game("team3", "team4", Score.of(0, 0), Instant.now());
         storedGames.put(gameId2, retainedGame);
@@ -132,14 +132,14 @@ class InMemoryLiveScoreBoardTest {
 
     @Test
     void shouldDoNothing_whenFinishingTheGame_thatDoesNotExist() {
-        GameId gameId = new GameId();
+        GameId gameId = GameId.generate();
 
         assertThatCode(() -> board.finishGame(gameId)).doesNotThrowAnyException();
     }
 
     @Test
     void shouldDoNothing_whenFinishingTheGame_thatHasAlreadyBeenFinished() {
-        GameId gameId = new GameId();
+        GameId gameId = GameId.generate();
         storedGames.put(gameId, new Game(TEAM_1, TEAM_2, Score.of(0, 0), Instant.now()));
         board.finishGame(gameId);
 
@@ -153,7 +153,7 @@ class InMemoryLiveScoreBoardTest {
 
     @Test
     void shouldUpdateGameScore_whenUpdatingScore() {
-        GameId gameId = new GameId();
+        GameId gameId = GameId.generate();
         storedGames.put(gameId, new Game(TEAM_1, TEAM_2, Score.of(0, 0), Instant.now()));
         Score newScore = Score.of(1, 2);
 
@@ -165,8 +165,8 @@ class InMemoryLiveScoreBoardTest {
 
     @Test
     void shouldUpdateGameScoreOnlyOfGivenGame_whenUpdatingScore() {
-        GameId gameId1 = new GameId();
-        GameId gameId2 = new GameId();
+        GameId gameId1 = GameId.generate();
+        GameId gameId2 = GameId.generate();
         storedGames.put(gameId1, new Game(TEAM_1, TEAM_2, Score.of(0, 0), Instant.now()));
         Score game2OriginalScore = Score.of(0, 0);
         storedGames.put(gameId2, new Game("team3", "team4", game2OriginalScore, Instant.now()));
@@ -180,7 +180,7 @@ class InMemoryLiveScoreBoardTest {
 
     @Test
     void shouldThrowGameNotFoundException_whenUpdatingScore_ofNotTrackedGame() {
-        GameId gameId = new GameId();
+        GameId gameId = GameId.generate();
         Score newScore = Score.of(1, 2);
 
         assertThatThrownBy(() -> board.updateScore(gameId, newScore)).isInstanceOf(GameNotFoundException.class);
@@ -195,7 +195,7 @@ class InMemoryLiveScoreBoardTest {
 
     @Test
     void shouldThrowIllegalArgumentException_whenUpdatingScore_withNullScore() {
-        GameId gameId = new GameId();
+        GameId gameId = GameId.generate();
 
         assertThatThrownBy(() -> board.updateScore(gameId, null)).isInstanceOf(IllegalArgumentException.class);
     }
@@ -208,10 +208,10 @@ class InMemoryLiveScoreBoardTest {
         Game game2 = new Game("c", "d", Score.of(2, 2), now.minusSeconds(2));
         Game game3 = new Game("e", "f", Score.of(3, 0), now);
         Game game4 = new Game("g", "h", Score.of(0, 0), now.minusSeconds(4));
-        storedGames.put(new GameId(), game1);
-        storedGames.put(new GameId(), game2);
-        storedGames.put(new GameId(), game3);
-        storedGames.put(new GameId(), game4);
+        storedGames.put(GameId.generate(), game1);
+        storedGames.put(GameId.generate(), game2);
+        storedGames.put(GameId.generate(), game3);
+        storedGames.put(GameId.generate(), game4);
 
         board.getSummary();
 
