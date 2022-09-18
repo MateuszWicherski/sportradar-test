@@ -35,4 +35,65 @@ The boards support the following operations:
 
 ## Usage
 
-TBD
+To use the library, it is needed to obtain `LiveScoreBoardFactory` instance by using its static `getInstance()` method.
+Then, two implementations of `LiveScoreBoard` can be produced - one thread unsafe (faster) with `newBoard()` method and
+another, thread-safe one, with method `newThreadSafeBoard()`.
+
+`LiveScoreBoard` exposes APIs for:
+
+- starting a game with `startGame(String, String)` method
+- changing the game score with `updateScore(GameId, Score)` method
+- finalizing the game with `finalizeGame(GameId)` method
+- producing a score summary of currently tracked games with `getSummary()` method
+
+Code example of library usage:
+
+```java
+import pl.wicherski.sportradar.scoreboard.*;
+
+class Main {
+
+    public static void main(String[] args) {
+        // initialize board
+        LiveScoreBoardFactory factory = LiveScoreBoardFactory.getInstance();
+        LiveScoreBoard board = factory.newBoard();
+
+        // start games
+        GameId mexicoCanadaGameId = board.startGame("Mexico", "Canada");
+        board.updateScore(mexicoCanadaGameId, Score.of(0, 5));
+        GameId spainBrazilGameId = board.startGame("Spain", "Brazil");
+        board.updateScore(spainBrazilGameId, Score.of(10, 2));
+        GameId germanyFranceGameId = board.startGame("Germany", "France");
+        board.updateScore(germanyFranceGameId, Score.of(2, 2));
+        GameId uruguayItalyGameId = board.startGame("Uruguay", "Italy");
+        board.updateScore(uruguayItalyGameId, Score.of(6, 6));
+        GameId argentinaAustraliaGameId = board.startGame("Argentina", "Australia");
+        board.updateScore(argentinaAustraliaGameId, Score.of(3, 1));
+
+        // check summary
+        ScoreSummary summary = board.getSummary();
+        /* summary.toPrintableSummary() -> 
+             1. Uruguay 6 - Italy 6
+             2. Spain 10 - Brazil 2
+             3. Mexico 0 - Canada 5
+             4. Argentina 3 - Australia 1
+             5. Germany 2 - France 2""");
+         */
+
+        // finish some games
+        board.finishGame(uruguayItalyGameId);
+        board.finishGame(spainBrazilGameId);
+        // update some games
+        board.updateScore(mexicoCanadaGameId, Score.of(3, 6));
+
+        // check summary after finishing and updating games
+        ScoreSummary newSummary = board.getSummary();
+        /* newSummary.toPrintableSummary() -> 
+             1. Mexico 3 - Canada 6
+             2. Argentina 3 - Australia 1
+             3. Germany 2 - France 2""");
+         */
+    }
+
+}
+```
