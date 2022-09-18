@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class InMemoryLiveScoreBoardTest {
 
@@ -53,6 +54,16 @@ class InMemoryLiveScoreBoardTest {
         board.startGame("team3", "team4");
 
         assertThat(storedGames).hasSize(2);
+    }
+
+    @Test
+    void shouldThrowIllegalArgumentException_whenStartingGame_andHomeTeamNameIsNull() {
+        assertThatThrownBy(() -> board.startGame(null, TEAM_2)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldThrowIllegalArgumentException_whenStartingGame_andAwayTeamNameIsNull() {
+        assertThatThrownBy(() -> board.startGame(TEAM_1, null)).isInstanceOf(IllegalArgumentException.class);
     }
 
 }

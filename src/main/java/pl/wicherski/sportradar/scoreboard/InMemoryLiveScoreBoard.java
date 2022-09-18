@@ -1,6 +1,7 @@
 package pl.wicherski.sportradar.scoreboard;
 
 import java.util.Map;
+import java.util.Objects;
 
 class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
@@ -12,6 +13,10 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     @Override
     public GameId startGame(String homeTeam, String awayTeam) {
+        if (Objects.isNull(homeTeam) || Objects.isNull(awayTeam)) {
+            throw new IllegalArgumentException("Team name cannot be null! Home=%s, Away=%s".formatted(homeTeam,
+                                                                                                      awayTeam));
+        }
         Game game = new Game(homeTeam, awayTeam);
         GameId gameId = new GameId();
         games.put(gameId, game);
