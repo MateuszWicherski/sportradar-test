@@ -122,4 +122,33 @@ class InMemoryLiveScoreBoardTest {
         assertThatThrownBy(() -> board.finishGame(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void shouldUpdateGameScore_whenUpdatingScore() {
+        GameId gameId = new GameId();
+        storedGames.put(gameId, new Game(TEAM_1, TEAM_2, Score.of(0, 0)));
+        Score newScore = Score.of(1, 2);
+
+        board.updateScore(gameId, newScore);
+
+        assertThat(storedGames).extractingByKey(gameId)
+                               .extracting(Game::score)
+                               .isEqualTo(newScore);
+    }
+
+    @Test
+    void shouldUpdateGameScoreOnlyOfGivenGame_whenUpdatingScore() {
+        GameId gameId1 = new GameId();
+        GameId gameId2 = new GameId();
+        storedGames.put(gameId1, new Game(TEAM_1, TEAM_2, Score.of(0, 0)));
+        Score game2OriginalScore = Score.of(0, 0);
+        storedGames.put(gameId2, new Game("team3", "team4", game2OriginalScore));
+        Score newScore = Score.of(1, 2);
+
+        board.updateScore(gameId1, newScore);
+
+        assertThat(storedGames).extractingByKey(gameId2)
+                               .extracting(Game::score)
+                               .isEqualTo(game2OriginalScore);
+    }
+
 }

@@ -33,7 +33,9 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     @Override
     public void updateScore(GameId gameId, Score score) throws GameNotFoundException {
-
+        Game gameToUpdate = games.get(gameId);
+        Game updatedGame = gameToUpdate.withUpdatedScore(score);
+        games.replace(gameId, updatedGame);
     }
 
     @Override
