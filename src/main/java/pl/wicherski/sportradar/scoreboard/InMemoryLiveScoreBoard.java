@@ -1,7 +1,6 @@
 package pl.wicherski.sportradar.scoreboard;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Objects.isNull;
