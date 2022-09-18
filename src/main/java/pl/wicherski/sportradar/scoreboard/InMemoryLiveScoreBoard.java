@@ -25,7 +25,7 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     @Override
     public void finishGame(GameId gameId) {
-
+        games.remove(gameId);
     }
 
     @Override

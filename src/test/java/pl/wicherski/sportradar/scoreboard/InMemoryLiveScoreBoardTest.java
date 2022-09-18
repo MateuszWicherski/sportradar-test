@@ -66,4 +66,29 @@ class InMemoryLiveScoreBoardTest {
         assertThatThrownBy(() -> board.startGame(TEAM_1, null)).isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void shouldRemoveGameFromStore_whenFinishingTheGame() {
+        GameId gameId = new GameId();
+        storedGames.put(gameId, new Game(TEAM_1, TEAM_2));
+
+        board.finishGame(gameId);
+
+        assertThat(storedGames).isEmpty();
+    }
+
+    @Test
+    void shouldRemoveOnlyFinishedGameFromStore_whenFinishingTheGame() {
+        GameId gameId1 = new GameId();
+        GameId gameId2 = new GameId();
+        storedGames.put(gameId1, new Game(TEAM_1, TEAM_2));
+        Game retainedGame = new Game("team3", "team4");
+        storedGames.put(gameId2, retainedGame);
+
+        board.finishGame(gameId1);
+
+        assertThat(storedGames).hasSize(1)
+                               .extractingByKey(gameId2)
+                               .isEqualTo(retainedGame);
+    }
+
 }
