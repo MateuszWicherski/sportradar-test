@@ -43,6 +43,18 @@ public final class LiveScoreBoardFactory {
     }
 
     /**
+     * Factory method for creating thread-safe instances of {@link LiveScoreBoard}. Thread safety is achieved by locking modifying operations on the board.
+     * It uses {@link #newBoard()} instance for behavior implementation.
+     * <p>
+     * Due to locking, for single-threaded usage {@link #newBoard()} will have better performance.
+     *
+     * @return configured, thread-sage {@link LiveScoreBoard}
+     */
+    public LiveScoreBoard newThreadSafeBoard() {
+        return new ThreadSafeLiveScoreBoard(newBoard());
+    }
+
+    /**
      * Returns instance of {@link LiveScoreBoardFactory} (the same each time).
      *
      * @return singleton instance of the class

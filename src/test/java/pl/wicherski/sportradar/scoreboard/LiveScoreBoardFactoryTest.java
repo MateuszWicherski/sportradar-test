@@ -16,4 +16,14 @@ class LiveScoreBoardFactoryTest {
                                   .isInstanceOf(InMemoryLiveScoreBoard.class);
     }
 
+    @Test
+    void shouldCreateThreadSafeBoard() {
+        LiveScoreBoardFactory instance = LiveScoreBoardFactory.getInstance();
+
+        LiveScoreBoard liveScoreBoard = instance.newThreadSafeBoard();
+
+        assertThat(liveScoreBoard).isNotNull()
+                                  .isInstanceOf(ThreadSafeLiveScoreBoard.class);
+    }
+
 }
