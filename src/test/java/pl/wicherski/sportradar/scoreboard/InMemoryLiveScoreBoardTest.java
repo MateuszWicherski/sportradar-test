@@ -159,4 +159,18 @@ class InMemoryLiveScoreBoardTest {
         assertThatThrownBy(() -> board.updateScore(gameId, newScore)).isInstanceOf(GameNotFoundException.class);
     }
 
+    @Test
+    void shouldThrowIllegalArgumentException_whenUpdatingScore_withNullGameId() {
+        Score newScore = Score.of(1, 2);
+
+        assertThatThrownBy(() -> board.updateScore(null, newScore)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldThrowIllegalArgumentException_whenUpdatingScore_withNullScore() {
+        GameId gameId = new GameId();
+
+        assertThatThrownBy(() -> board.updateScore(gameId, null)).isInstanceOf(IllegalArgumentException.class);
+    }
+
 }

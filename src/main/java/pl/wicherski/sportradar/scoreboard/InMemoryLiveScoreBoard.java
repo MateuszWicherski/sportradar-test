@@ -4,6 +4,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static java.util.Objects.isNull;
+
 class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     private final Map<GameId, Game> games;
@@ -14,10 +16,11 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     @Override
     public GameId startGame(String homeTeam, String awayTeam) {
-        if (Objects.isNull(homeTeam) || Objects.isNull(awayTeam)) {
+        if (isNull(homeTeam) || isNull(awayTeam)) {
             throw new IllegalArgumentException("Team name cannot be null! Home=%s, Away=%s".formatted(homeTeam,
                                                                                                       awayTeam));
         }
+
         Game game = new Game(homeTeam, awayTeam, Score.of(0, 0));
         GameId gameId = new GameId();
         games.put(gameId, game);
@@ -26,7 +29,7 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     @Override
     public void finishGame(GameId gameId) {
-        if (Objects.isNull(gameId)) {
+        if (isNull(gameId)) {
             throw new IllegalArgumentException("Game ID cannot be null!");
         }
         games.remove(gameId);
@@ -34,6 +37,12 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     @Override
     public void updateScore(GameId gameId, Score score) throws GameNotFoundException {
+        if (isNull(gameId) || isNull(score)) {
+            throw new IllegalArgumentException("Game ID and score cannot be null! GameID=%s, Score=%s".formatted(
+                    gameId,
+                    score));
+        }
+
         Game gameToUpdate = Optional.ofNullable(games.get(gameId))
                                     .orElseThrow(() -> new GameNotFoundException(gameId));
         Game updatedGame = gameToUpdate.withUpdatedScore(score);
