@@ -2,6 +2,7 @@ package pl.wicherski.sportradar.scoreboard;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,11 +12,11 @@ class ScoreSummaryImplTest {
     @Test
     void shouldReturnGamesList_whenFormattingSummary() {
         List<Game> games = List.of(
-                new Game("Uruguay", "Italy", Score.of(6, 6)),
-                new Game("Spain", "Brazil", Score.of(10, 2)),
-                new Game("Mexico", "Canada", Score.of(0, 5)),
-                new Game("Argentina", "Australia", Score.of(3, 1)),
-                new Game("Germany", "France", Score.of(2, 2))
+                new Game("Uruguay", "Italy", Score.of(6, 6), Instant.now()),
+                new Game("Spain", "Brazil", Score.of(10, 2), Instant.now()),
+                new Game("Mexico", "Canada", Score.of(0, 5), Instant.now()),
+                new Game("Argentina", "Australia", Score.of(3, 1), Instant.now()),
+                new Game("Germany", "France", Score.of(2, 2), Instant.now())
         );
         ScoreSummary scoreSummary = new ScoreSummaryImpl(games);
 

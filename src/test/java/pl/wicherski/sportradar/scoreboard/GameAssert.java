@@ -2,6 +2,8 @@ package pl.wicherski.sportradar.scoreboard;
 
 import org.assertj.core.api.AbstractAssert;
 
+import java.time.Instant;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public final class GameAssert extends AbstractAssert<GameAssert, Game> {
@@ -29,6 +31,12 @@ public final class GameAssert extends AbstractAssert<GameAssert, Game> {
     public GameAssert hasScore(Score score) {
         isNotNull();
         assertThat(actual.score()).isEqualTo(score);
+        return this;
+    }
+
+    public GameAssert wasCreatedAt(Instant creationTime) {
+        isNotNull();
+        assertThat(actual.creationTimestamp()).isEqualTo(creationTime);
         return this;
     }
 

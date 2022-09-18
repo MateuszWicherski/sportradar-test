@@ -8,9 +8,11 @@ import static java.util.Objects.isNull;
 class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
     private final Map<GameId, Game> games;
+    private final TimeProvider timeProvider;
 
-    InMemoryLiveScoreBoard(Map<GameId, Game> games) {
+    InMemoryLiveScoreBoard(Map<GameId, Game> games, TimeProvider timeProvider) {
         this.games = games;
+        this.timeProvider = timeProvider;
     }
 
     @Override
@@ -20,7 +22,7 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
                                                                                                       awayTeam));
         }
 
-        Game game = new Game(homeTeam, awayTeam, Score.of(0, 0));
+        Game game = new Game(homeTeam, awayTeam, Score.of(0, 0), timeProvider.now());
         GameId gameId = new GameId();
         games.put(gameId, game);
         return gameId;
