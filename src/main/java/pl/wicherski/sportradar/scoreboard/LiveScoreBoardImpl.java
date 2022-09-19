@@ -2,22 +2,21 @@ package pl.wicherski.sportradar.scoreboard;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import static java.util.Objects.isNull;
 
-class InMemoryLiveScoreBoard implements LiveScoreBoard {
+class LiveScoreBoardImpl implements LiveScoreBoard {
 
-    private final Map<GameId, Game> games;
+    private final GameRepository gameRepository;
     private final TimeProvider timeProvider;
     private final ScoreSummaryFactory scoreSummaryFactory;
     private final Comparator<Game> gamesSortingComparator;
 
-    InMemoryLiveScoreBoard(Map<GameId, Game> games,
-                           TimeProvider timeProvider,
-                           ScoreSummaryFactory scoreSummaryFactory, Comparator<Game> gamesSortingComparator) {
-        this.games = games;
+    LiveScoreBoardImpl(GameRepository gameRepository,
+                       TimeProvider timeProvider,
+                       ScoreSummaryFactory scoreSummaryFactory,
+                       Comparator<Game> gamesSortingComparator) {
+        this.gameRepository = gameRepository;
         this.timeProvider = timeProvider;
         this.scoreSummaryFactory = scoreSummaryFactory;
         this.gamesSortingComparator = gamesSortingComparator;
@@ -32,7 +31,7 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
 
         Game game = new Game(homeTeam, awayTeam, Score.of(0, 0), timeProvider.now());
         GameId gameId = GameId.generate();
-        games.put(gameId, game);
+        gameRepository.save(gameId, game);
         return gameId;
     }
 
@@ -41,7 +40,7 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
         if (isNull(gameId)) {
             throw new IllegalArgumentException("Game ID cannot be null!");
         }
-        games.remove(gameId);
+        gameRepository.delete(gameId);
     }
 
     @Override
@@ -52,18 +51,18 @@ class InMemoryLiveScoreBoard implements LiveScoreBoard {
                     score));
         }
 
-        Game gameToUpdate = Optional.ofNullable(games.get(gameId))
-                                    .orElseThrow(() -> new GameNotFoundException(gameId));
+        Game gameToUpdate = gameRepository.get(gameId)
+                                          .orElseThrow(() -> new GameNotFoundException(gameId));
         Game updatedGame = gameToUpdate.withUpdatedScore(score);
-        games.replace(gameId, updatedGame);
+        gameRepository.update(gameId, updatedGame);
     }
 
     @Override
     public ScoreSummary getSummary() {
-        List<Game> sortedGames = games.values()
-                                      .stream()
-                                      .sorted(gamesSortingComparator)
-                                      .toList();
+        List<Game> sortedGames = gameRepository.getAll()
+                                               .stream()
+                                               .sorted(gamesSortingComparator)
+                                               .toList();
         return scoreSummaryFactory.createSummaryFor(sortedGames);
     }
 

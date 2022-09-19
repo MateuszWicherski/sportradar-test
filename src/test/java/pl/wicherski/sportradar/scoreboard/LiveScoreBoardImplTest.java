@@ -10,9 +10,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -20,25 +19,27 @@ import static org.mockito.Mockito.*;
 import static pl.wicherski.sportradar.scoreboard.GameAssert.assertThatGame;
 
 @ExtendWith(MockitoExtension.class)
-class InMemoryLiveScoreBoardTest {
+class LiveScoreBoardImplTest {
 
     private static final String TEAM_1 = "team1";
     private static final String TEAM_2 = "team2";
 
-    private InMemoryLiveScoreBoard board;
-    private Map<GameId, Game> storedGames;
+    private LiveScoreBoardImpl board;
+    @Mock
+    private GameRepository gameRepositoryMock;
     @Mock
     private TimeProvider timeProviderMock;
     @Mock
     private ScoreSummaryFactory scoreSummaryFactoryMock;
     @Captor
-    private ArgumentCaptor<List<Game>> gamesCaptor;
+    private ArgumentCaptor<List<Game>> gamesListCaptor;
+    @Captor
+    private ArgumentCaptor<Game> gameCaptor;
 
     @BeforeEach
     void setUp() {
-        storedGames = new HashMap<>();
-        board = new InMemoryLiveScoreBoard(storedGames, timeProviderMock, scoreSummaryFactoryMock,
-                                           Comparator.comparing(Game::creationTimestamp));
+        board = new LiveScoreBoardImpl(gameRepositoryMock, timeProviderMock, scoreSummaryFactoryMock,
+                                       Comparator.comparing(Game::creationTimestamp));
     }
 
     @Test
@@ -60,10 +61,9 @@ class InMemoryLiveScoreBoardTest {
     void shouldStoreStartedGame_whenStartingGame() {
         GameId gameId = board.startGame(TEAM_1, TEAM_2);
 
-        assertThat(storedGames).hasSize(1)
-                               .extractingByKey(gameId)
-                               .satisfies(game -> assertThatGame(game).hasHomeTeam(TEAM_1)
-                                                                      .hasAwayTeam(TEAM_2));
+        verify(gameRepositoryMock).save(eq(gameId), gameCaptor.capture());
+        assertThatGame(gameCaptor.getValue()).hasHomeTeam(TEAM_1)
+                                             .hasAwayTeam(TEAM_2);
     }
 
     @Test
@@ -71,17 +71,15 @@ class InMemoryLiveScoreBoardTest {
         board.startGame(TEAM_1, TEAM_2);
         board.startGame("team3", "team4");
 
-        assertThat(storedGames).hasSize(2);
+        verify(gameRepositoryMock, times(2)).save(any(), any());
     }
 
     @Test
     void shouldStartGameWithScoreZeroToZero_whenStartingGame() {
         GameId gameId = board.startGame(TEAM_1, TEAM_2);
 
-        Score expectedScore = Score.of(0, 0);
-        assertThat(storedGames).extractingByKey(gameId)
-                               .satisfies(game -> assertThatGame(game).hasScore(expectedScore));
-
+        verify(gameRepositoryMock).save(eq(gameId), gameCaptor.capture());
+        assertThatGame(gameCaptor.getValue()).hasScore(Score.of(0, 0));
     }
 
     @Test
@@ -91,8 +89,8 @@ class InMemoryLiveScoreBoardTest {
 
         GameId gameId = board.startGame(TEAM_1, TEAM_2);
 
-        assertThat(storedGames).extractingByKey(gameId)
-                               .satisfies(game -> assertThatGame(game).wasCreatedAt(now));
+        verify(gameRepositoryMock).save(eq(gameId), gameCaptor.capture());
+        assertThatGame(gameCaptor.getValue()).wasCreatedAt(now);
     }
 
     @Test
@@ -108,40 +106,15 @@ class InMemoryLiveScoreBoardTest {
     @Test
     void shouldRemoveGameFromStore_whenFinishingTheGame() {
         GameId gameId = GameId.generate();
-        storedGames.put(gameId, new Game(TEAM_1, TEAM_2, Score.of(0, 0), Instant.now()));
 
         board.finishGame(gameId);
 
-        assertThat(storedGames).isEmpty();
-    }
-
-    @Test
-    void shouldRemoveOnlyFinishedGameFromStore_whenFinishingTheGame() {
-        GameId gameId1 = GameId.generate();
-        GameId gameId2 = GameId.generate();
-        storedGames.put(gameId1, new Game(TEAM_1, TEAM_2, Score.of(0, 0), Instant.now()));
-        Game retainedGame = new Game("team3", "team4", Score.of(0, 0), Instant.now());
-        storedGames.put(gameId2, retainedGame);
-
-        board.finishGame(gameId1);
-
-        assertThat(storedGames).hasSize(1)
-                               .extractingByKey(gameId2)
-                               .isEqualTo(retainedGame);
+        verify(gameRepositoryMock).delete(gameId);
     }
 
     @Test
     void shouldDoNothing_whenFinishingTheGame_thatDoesNotExist() {
         GameId gameId = GameId.generate();
-
-        assertThatCode(() -> board.finishGame(gameId)).doesNotThrowAnyException();
-    }
-
-    @Test
-    void shouldDoNothing_whenFinishingTheGame_thatHasAlreadyBeenFinished() {
-        GameId gameId = GameId.generate();
-        storedGames.put(gameId, new Game(TEAM_1, TEAM_2, Score.of(0, 0), Instant.now()));
-        board.finishGame(gameId);
 
         assertThatCode(() -> board.finishGame(gameId)).doesNotThrowAnyException();
     }
@@ -154,28 +127,14 @@ class InMemoryLiveScoreBoardTest {
     @Test
     void shouldUpdateGameScore_whenUpdatingScore() {
         GameId gameId = GameId.generate();
-        storedGames.put(gameId, new Game(TEAM_1, TEAM_2, Score.of(0, 0), Instant.now()));
+        Game game = new Game(TEAM_1, TEAM_2, Score.of(0, 0), Instant.now());
+        when(gameRepositoryMock.get(gameId)).thenReturn(Optional.of(game));
         Score newScore = Score.of(1, 2);
 
         board.updateScore(gameId, newScore);
 
-        assertThat(storedGames).extractingByKey(gameId)
-                               .satisfies(game -> assertThatGame(game).hasScore(newScore));
-    }
-
-    @Test
-    void shouldUpdateGameScoreOnlyOfGivenGame_whenUpdatingScore() {
-        GameId gameId1 = GameId.generate();
-        GameId gameId2 = GameId.generate();
-        storedGames.put(gameId1, new Game(TEAM_1, TEAM_2, Score.of(0, 0), Instant.now()));
-        Score game2OriginalScore = Score.of(0, 0);
-        storedGames.put(gameId2, new Game("team3", "team4", game2OriginalScore, Instant.now()));
-        Score newScore = Score.of(1, 2);
-
-        board.updateScore(gameId1, newScore);
-
-        assertThat(storedGames).extractingByKey(gameId2)
-                               .satisfies(game -> assertThatGame(game).hasScore(game2OriginalScore));
+        verify(gameRepositoryMock).update(eq(gameId), gameCaptor.capture());
+        assertThatGame(gameCaptor.getValue()).hasScore(newScore);
     }
 
     @Test
@@ -208,15 +167,12 @@ class InMemoryLiveScoreBoardTest {
         Game game2 = new Game("c", "d", Score.of(2, 2), now.minusSeconds(2));
         Game game3 = new Game("e", "f", Score.of(3, 0), now);
         Game game4 = new Game("g", "h", Score.of(0, 0), now.minusSeconds(4));
-        storedGames.put(GameId.generate(), game1);
-        storedGames.put(GameId.generate(), game2);
-        storedGames.put(GameId.generate(), game3);
-        storedGames.put(GameId.generate(), game4);
+        when(gameRepositoryMock.getAll()).thenReturn(List.of(game1, game2, game3, game4));
 
         board.getSummary();
 
-        verify(scoreSummaryFactoryMock).createSummaryFor(gamesCaptor.capture());
-        assertThat(gamesCaptor.getValue()).containsExactly(game4, game2, game1, game3);
+        verify(scoreSummaryFactoryMock).createSummaryFor(gamesListCaptor.capture());
+        assertThat(gamesListCaptor.getValue()).containsExactly(game4, game2, game1, game3);
     }
 
     @Test

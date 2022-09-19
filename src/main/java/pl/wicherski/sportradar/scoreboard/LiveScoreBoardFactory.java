@@ -36,10 +36,10 @@ public final class LiveScoreBoardFactory {
      * @return configured new {@link LiveScoreBoard}
      */
     public LiveScoreBoard newBoard() {
-        return new InMemoryLiveScoreBoard(new HashMap<>(),
-                                          timeProvider,
-                                          scoreSummaryFactory,
-                                          HIGHEST_OVERALL_SCORE.thenComparing(RECENT_FIRST));
+        return new LiveScoreBoardImpl(new InMemoryGameRepository(new HashMap<>()),
+                                      timeProvider,
+                                      scoreSummaryFactory,
+                                      HIGHEST_OVERALL_SCORE.thenComparing(RECENT_FIRST));
     }
 
     /**

@@ -13,7 +13,7 @@ class LiveScoreBoardFactoryTest {
         LiveScoreBoard liveScoreBoard = instance.newBoard();
 
         assertThat(liveScoreBoard).isNotNull()
-                                  .isInstanceOf(InMemoryLiveScoreBoard.class);
+                                  .isInstanceOf(LiveScoreBoardImpl.class);
     }
 
     @Test
