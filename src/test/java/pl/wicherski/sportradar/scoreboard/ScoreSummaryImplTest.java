@@ -42,4 +42,16 @@ class ScoreSummaryImplTest {
                 .isEmpty();
     }
 
+    @Test
+    void shouldReturnCachedSummary_whenFormattingSummary_multipleTimes() {
+        List<Game> games = List.of(new Game("Uruguay", "Italy", Score.of(6, 6), Instant.now()));
+        ScoreSummary scoreSummary = new ScoreSummaryImpl(games);
+
+        String printableSummary1 = scoreSummary.toPrintableSummary();
+        String printableSummary2 = scoreSummary.toPrintableSummary();
+
+        assertThat(printableSummary1)
+                .isSameAs(printableSummary2);
+    }
+
 }
